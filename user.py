@@ -2,6 +2,7 @@ from functools import wraps
 
 from domain import roles
 import uuid
+
 class User:
     __slots__ = ('user_id','username', 'role')
     def __str__(self):
@@ -25,6 +26,7 @@ class User:
         if name is None:
             raise ValueError("Новое имя не передано")
         self.username = name
+
 def access_level(role: str):
     def decorator(func):
         @wraps(func)
@@ -40,6 +42,28 @@ def access_level(role: str):
             return func(user, *args, **kwagrs)
         return wrapper
     return decorator
+
+class SudoMode:
+    __slots__ = ('user', 'original_role', 'sudo_active')
+    
+    def __init__(self, user: User):
+        if not isinstance(user, User):
+            raise TypeError("Передан неверный класс")
+        self.user = user
+        self.original_role = None
+        self.sudo_active = False
+    
+    def __enter__(self):
+        self.original_role = self.user.role
+        self.user.set_role("ADMIN")
+        self.sudo_active = True
+        return self.user
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.sudo_active and self.original_role:
+            self.user.set_role(self.original_role)
+        return False
+
 
 @access_level("ADMIN")
 def update_role(admin, target_user:User, role: str):

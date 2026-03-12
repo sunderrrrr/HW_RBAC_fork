@@ -16,3 +16,9 @@ print("=============")
 print(some_guest_func(ilya))
 print("=============")
 print(update_role(ilya, petya, "ADMIN"))
+print("=============")
+update_role(ilya, petya, "USER")
+with SudoMode(petya) as su:
+    print(update_role(su, vanya, "USER"))
+
+print(petya.get_role())
